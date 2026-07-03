@@ -77,8 +77,10 @@ body{
 }
 
 .day{
+    
     width:60px;
-    height:60px;
+
+    aspect-ratio:1/1;
     position:relative;
 
     display:flex;
@@ -88,7 +90,7 @@ body{
     font-size:22px;
     font-weight:bold;
 
-    border-radius:14px;
+    border-radius:12px;
 
     color:#694b4b;
 
@@ -103,7 +105,7 @@ body{
 
 .day.past{
     opacity:.35;
-    transform:translateY(4px);
+    transform:translateY(2px);
     box-shadow:none;
 }
 
@@ -175,6 +177,7 @@ body{
     font-size:15px;
     color:#7b6f6f;
     text-align:center;
+    top: -55px;
 }
 
 .month-marker .arrow{
@@ -340,8 +343,6 @@ weeks.forEach((week,weekIndex)=>{
                 <div class="arrow">▼</div>
                 
             `;
-
-            marker.style.top="-65px";
 
             day.appendChild(marker);
         }
