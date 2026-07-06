@@ -39,15 +39,15 @@ body{
 }
 
 #countdownBox{
-
-    width: min(calc(60px*5 + 5px*4), 60vw);
+    width: fit-content;
+    max-width: 90vw;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 70px;
     padding: 18px;
     border-radius: 12px;
     background: #fff0f3;
-    text-align: center
+    text-align: center;
     font-size: 34px;
     font-weight: bold;
     color: #8f5d5d;
@@ -112,9 +112,10 @@ body{
 
 .month-marker{
     position: absolute;
+    white-space: nowrap;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 15px
+    font-size: 15px;
     color: #7b6f6f;
     text-align: center;
     top: calc(var(--track-anchor) - var(--marker-gap) - var(--days-offset));
