@@ -265,7 +265,6 @@ if(currentWeek.length){
     weeks.push(currentWeek);
 }
 
-const nowUTC=new Date();
 const nowTaipei=getTaipeiDate(new Date());
 const today=getTaipeiDate(new Date());
 today.setUTCHours(0,0,0,0);
@@ -333,11 +332,11 @@ weeks.forEach((week,weekIndex)=>{
             day.appendChild(marker);
         }
 
-        if(formatDate(date) < formatDate(nowUTC)){
+        if(formatDate(date) < formatDate(today)){
             day.classList.add("past");
         }
 
-        if(formatDate(date)===formatDate(nowUTC)){
+        if(formatDate(date)===formatDate(today)){
             day.classList.add("today");
             currentWeekIndex=weekIndex;
             currentDayIndex=index;
@@ -400,9 +399,8 @@ requestAnimationFrame(()=>{
 function showHammock(){
     if(!HAMMOCK_GIF) return;
 
-    const taipei=getTaipeiDate(new Date());
-    const day=taipei.getUTCDay();
-    const hour=taipei.getUTCHours();
+    const day=nowTaipei.getUTCDay();
+    const hour=nowTaipei.getUTCHours();
     const sleepMode=(day===0 && hour>=20) || (day===1 && hour<8);
 
     if(!sleepMode) return;
