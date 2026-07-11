@@ -57,6 +57,11 @@ body{
     font-family: "Huninn", sans-serif;
 }
 
+.sparkles{
+    height: 1.5em;
+    vertical-align: middle;
+}
+
 #dayNumber{
     font-family: "Press Start 2P", monospace;
 }
@@ -165,6 +170,7 @@ body{
     left: 50%;
     transform: translateX(-50%);
     top: var(--track-offset);
+    width: 100%;
     height: var(--track-height);
     border-radius: 5px;
     background: #ffd9e5;
@@ -212,7 +218,8 @@ body{
 <div id="countdownBox" class="pixel-borders pixel-borders--3a pixel-borders--inset pixel-borders--inset-all">
     <span class="normal-text">烙跑倒數</span>
     <span id="dayNumber">dayNumber</span>
-    <span class="normal-text">天 ✨</span>
+    <span class="normal-text">天</span>
+    <img class="sparkles" src="sparkles.png">
 </div>
 
 <div id="calendar"></div>
@@ -277,6 +284,10 @@ document.getElementById("dayNumber").textContent=remainingDays;
 
 let currentWeekIndex=-1;
 let currentDayIndex=-1;
+
+function updateTrackWidth(track, row){
+        track.style.width=row.offsetWidth+"px";
+    }
 
 weeks.forEach((week,weekIndex)=>{
     const weekColor=WEEK_COLORS[weekIndex % WEEK_COLORS.length];
@@ -368,7 +379,7 @@ weeks.forEach((week,weekIndex)=>{
     calendar.appendChild(wrapper);
 
     requestAnimationFrame(()=>{
-        track.style.width=row.offsetWidth+"px";
+        updateTrackWidth(track, row);
     });
 });
 
