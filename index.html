@@ -26,6 +26,7 @@ href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
     --week-gap: 50px;
     --track-height: 18px;
     --walker-size: 50px;
+    --walker-y-offset: 0px;
     --hammock-height: 60px;
     --marker-gap: 28px;
     --track-anchor: calc(var(--track-offset) + var(--track-height) / 2);
@@ -187,7 +188,7 @@ body{
     position: absolute;
     width: var(--walker-size);
     height: var(--walker-size);
-    top: calc(var(--track-anchor) - (var(--walker-size) / 2));
+    top: calc(var(--track-anchor) - (var(--walker-size) / 2) + var(--walker-y-offset));
     transition: .3s;
 }
 
@@ -303,6 +304,10 @@ weeks.forEach((week,weekIndex)=>{
 
     const walker=document.createElement("img");
     walker.className="walker";
+    const dayWidth=document.querySelector(".day")?.offsetWidth || 50;
+    walker.src=dayWidth < 48
+        ? "walk_24px.gif"
+        : "walk_48px.gif";
     if(!WALK_GIF){
         walker.classList.add("hidden");
     }else{
@@ -399,8 +404,10 @@ requestAnimationFrame(()=>{
 
     if(WALK_GIF && walker){
         walker.style.display="block";
-        const x=targetBox.offsetLeft + targetBox.offsetWidth/2 - 28;
-        walker.style.left=x+"px";
+        const walkerWidth = walker.offsetWidth;
+        const x=targetBox.offsetLeft + targetBox.offsetWidth / 2 - walkerWidth / 2;
+        walker.style.left = x + "px";
+
         walker.style.transform=currentWeekIndex % 2===0
             ? "scaleX(1)"
             : "scaleX(-1)";
