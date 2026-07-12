@@ -206,7 +206,7 @@ body{
     left:0;
     width:72px;
     height:100%;
-
+    display: none;
     background-image:url(current.png);
     background-repeat:no-repeat;
     background-size:100% 100%;
@@ -322,8 +322,9 @@ document.getElementById("dayNumber").textContent=remainingDays;
 let currentWeekIndex=-1;
 let currentDayIndex=-1;
 
-function updateTrackWidth(track, row){
+function updateTrackWidth(track,row){
     track.style.width=row.offsetWidth+"px";
+    track.style.left=row.offsetLeft+"px";
 }
 
 weeks.forEach((week,weekIndex)=>{
@@ -445,8 +446,7 @@ requestAnimationFrame(()=>{
     
 
     const week=allWeeks[currentWeekIndex];
-    const boxes=week.querySelectorAll(".day");
-    const targetBox=boxes[currentDayIndex];
+    const targetBox=week.querySelector(".day.today");
     const track=week.querySelector(".track");
     const row=week.querySelector(".days");
     const rowRect=row.getBoundingClientRect();
@@ -458,11 +458,42 @@ requestAnimationFrame(()=>{
     walker.style.display="block";
 
     if(ENABLE_WALKER && walker){
-        const walkerWidth=walker.width;
         const weekRect=week.getBoundingClientRect();
         const boxRect=targetBox.getBoundingClientRect();
-        
-        let progressWidth;
+
+        const isReverse=row.classList.contains("reverse");
+        const boxCenter=boxRect.left - rowRect.left + boxRect.width / 2;
+        const trackCompleted=week.querySelector(".track-completed");
+        const trackCurrent=week.querySelector(".track-current");
+        trackCurrent.style.display="block";
+
+        if(!isReverse){
+            trackCompleted.style.left="0px";
+            trackCompleted.style.right="auto";
+            trackCompleted.style.width=Math.max(0, boxCenter-36) + "px";
+
+            trackCurrent.style.left=Math.max(0, boxCenter-36) + "px";
+            trackCurrent.style.right="auto";
+        }else{
+            const reverseWidth=rowRect.width - boxCenter;
+            trackCompleted.style.left="auto";
+            trackCompleted.style.right="0px";
+            trackCompleted.style.width=Math.max(0, reverseWidth - 36) + "px";
+
+            trackCurrent.style.left="auto";
+            trackCurrent.style.right=Math.max(0, reverseWidth - 36) + "px";
+        }
+
+        const walkerWidth=walker.width;
+        const x=boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
+        walker.style.left=x + "px";
+        walker.style.transform=currentWeekIndex % 2===0
+            ? "scaleX(1)"
+            : "scaleX(-1)";
+
+
+
+        /*let progressWidth;
         if(week.querySelector(".days").classList.contains("reverse")){
             progressWidth=rowRect.right - boxRect.right + boxRect.width;
         }
@@ -470,16 +501,13 @@ requestAnimationFrame(()=>{
             progressWidth=boxRect.left - rowRect.left + boxRect.width;
         }
 
+
         const trackCompleted=week.querySelector(".track-completed");
         trackCompleted.style.width=Math.max(0, progressWidth - 72) + "px";
         const trackCurrent=week.querySelector(".track-current");
-        trackCurrent.style.left=Math.max(0, progressWidth - 72) + "px";
+        trackCurrent.style.display="block";
+        trackCurrent.style.left=Math.max(0, progressWidth - 72) + "px";*/
 
-        const x=boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
-        walker.style.left=x + "px";
-        walker.style.transform=currentWeekIndex % 2===0
-            ? "scaleX(1)"
-            : "scaleX(-1)";
     }
 });
 
