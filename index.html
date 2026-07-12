@@ -357,12 +357,6 @@ weeks.forEach((week,weekIndex)=>{
         walker.classList.add("hidden");
     }
 
-    const size=useSmallWalker ? 24 : 48;
-    walker.width=size;
-    walker.height=size;
-    document.documentElement.style.setProperty(
-        "--walker-size", `${size}px`);
-    
     wrapper.appendChild(walker);
     wrapper.appendChild(track);
 
@@ -412,7 +406,7 @@ weeks.forEach((week,weekIndex)=>{
 
         if(formatDate(date)===END_DATE){
             day.classList.add("freedom");
-            const flag=document.createElement("div");
+            const flag=document.createElement("img");
             flag.className="flag";
             flag.src="flag.png";
             day.appendChild(flag);
@@ -439,6 +433,10 @@ weeks.forEach((week,weekIndex)=>{
         updateTrackWidth(track, row);
     });
 });
+
+const size=window.innerWidth < 480  ? 24 : 48;
+document.documentElement.style.setProperty(
+        "--walker-size", `${size}px`);
 
 requestAnimationFrame(()=>{
     const allWeeks=document.querySelectorAll(".week");
