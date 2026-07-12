@@ -16,7 +16,6 @@ href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 
 <style>
 :root{
-    --box-size: 50px;
     --active-bg: #ffffff;
     --active-border: #d5d5d5;
     --past-bg: #f2f2f2;
@@ -27,10 +26,8 @@ href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
     --days-offset: -3px;
 
     --track-offset:-20px;
-    --track-gap: 20px;
-    --track-height: 18px;
-    --track-anchor: calc(var(--track-offset) + var(--track-height) / 2);
-    
+
+    --track-height: 18px;    
     
     --walker-top: calc((4px + var(--walker-size)) * -1);
 
@@ -184,12 +181,6 @@ body{
     background: transparent;
 }
 
-.track-image{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 .track-completed{
     position:absolute;
     left:0;
@@ -234,7 +225,8 @@ body{
     position: absolute;
     top: -25px;
     right: 20px;
-    font-size: 24px;
+    width: 24px;
+    height: 24px;
 }
 
 .hammock{
@@ -268,8 +260,8 @@ const END_DATE="2026-09-06";
 const ENABLE_WALKER=true;
 const WALK_GIF_SMALL="walk_24px.gif";
 const WALK_GIF_LARGE="walk_48px.gif";
-const HAMMOCK_GIF="";
 const TRACK_IMAGE="";
+const HAMMOCK_GIF="";
 const WEEK_COLORS=["#ffbfd9","#ffe79a","#bff0b7","#bfeeff"];
 
 const calendar=document.getElementById("calendar");
@@ -370,6 +362,7 @@ weeks.forEach((week,weekIndex)=>{
     walker.height=size;
     document.documentElement.style.setProperty(
         "--walker-size", `${size}px`);
+    
     wrapper.appendChild(walker);
     wrapper.appendChild(track);
 
@@ -421,7 +414,7 @@ weeks.forEach((week,weekIndex)=>{
             day.classList.add("freedom");
             const flag=document.createElement("div");
             flag.className="flag";
-            flag.textContent="🚩";
+            flag.src="flag.png";
             day.appendChild(flag);
         }
 
@@ -537,6 +530,7 @@ function showHammock(){
 }
 
 showHammock();
+
 </script>
  
 </body>
