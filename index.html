@@ -177,11 +177,10 @@ body{
     position: absolute;
     left: 0;
     top: var(--track-offset);
-
     height: var(--track-height);
     border-radius: 5px;
-    background: #ffd9e5;
     overflow: hidden;
+    background: transparent;
 }
 
 .track-image{
@@ -191,11 +190,26 @@ body{
 }
 
 .track-completed{
-    background:#8fd694;
+    position:absolute;
+    left:0;
+    top:0;
+    height:100%;
+
+    background-image:url(completed.png);
+    background-repeat:repeat-x;
+    background-size:auto 100%;
 }
 
 .track-current{
-    background:#ffd9e5;
+    position:absolute;
+    top:0;
+    left:0;
+    width:72px;
+    height:100%;
+
+    background-image:url(current.png);
+    background-repeat:no-repeat;
+    background-size:100% 100%;
 }
 
 
@@ -320,8 +334,18 @@ weeks.forEach((week,weekIndex)=>{
 
     const track=document.createElement("div");
     track.className="track";
+
+    const trackCompleted=document.createElement("div");
+    trackCompleted.className="track-completed";
+
+    const trackCurrent=document.createElement("div");
+    trackCurrent.className="track-current";
+
+    track.appendChild(trackCompleted);
+    track.appendChild(trackCurrent);
+
     if(TRACK_IMAGE){
-        track.innerHTML=`<img class="track-image" src="${TRACK_IMAGE}">`;
+        track.style.background=`url(${TRACK_IMAGE}) center/cover`;
     }
 
     const walker=document.createElement("img");
@@ -418,18 +442,7 @@ requestAnimationFrame(()=>{
     if(currentWeekIndex<0) return;
 
     const allWeeks=document.querySelectorAll(".week");
-    allWeeks.forEach((weekEl,index)=>{
-        const track=weekEl.querySelector(".track");
-        if(index < currentWeekIndex){
-            track.classList.add("track-completed");
-        }
-        else if(index === currentWeekIndex){
-            track.classList.add("track-current");
-        }
-        else{
-            track.style.display="none";
-        }
-    });
+    
 
     const week=allWeeks[currentWeekIndex];
     const boxes=week.querySelectorAll(".day");
@@ -457,7 +470,11 @@ requestAnimationFrame(()=>{
             progressWidth=boxRect.left - rowRect.left + boxRect.width;
         }
 
-        track.style.width=progressWidth + "px";
+        const trackCompleted=week.querySelector(".track-completed");
+        trackCompleted.style.width=Math.max(0, progressWidth - 72) + "px";
+        const trackCurrent=week.querySelector(".track-current");
+        trackCurrent.style.left=Math.max(0, progressWidth - 72) + "px";
+
         const x=boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
         walker.style.left=x + "px";
         walker.style.transform=currentWeekIndex % 2===0
