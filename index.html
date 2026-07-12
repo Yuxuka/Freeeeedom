@@ -22,7 +22,7 @@ href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
     --past-bg: #f2f2f2;
     --past-text: #b7b7b7;
 
-    --week-gap: 50px;
+    --week-gap: 60px;
 
     --days-offset: -3px;
 
@@ -31,8 +31,8 @@ href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
     --track-height: 18px;
     --track-anchor: calc(var(--track-offset) + var(--track-height) / 2);
     
-    --walker-size: 48px;
-    --walker-top: -50px;
+    
+    --walker-top: calc((var(--walker-size) + var(--walker-size)/12) * -1);
 
     --hammock-height: 60px;
     --hammock-top: -60px;
@@ -362,6 +362,11 @@ weeks.forEach((week,weekIndex)=>{
         walker.classList.add("hidden");
     }
 
+    const size=useSmallWalker ? 24 : 48;
+    walker.width=size;
+    walker.height=size;
+    document.documentElement.style.setProperty(
+        "--walker-size", `${size}px`);
     wrapper.appendChild(walker);
     wrapper.appendChild(track);
 
@@ -440,14 +445,26 @@ weeks.forEach((week,weekIndex)=>{
 });
 
 requestAnimationFrame(()=>{
-    if(currentWeekIndex<0) return;
-
     const allWeeks=document.querySelectorAll(".week");
-    
+
+    allWeeks.forEach((weekEl,index)=>{
+        const trackCompleted=weekEl.querySelector(".track-completed");
+        const trackCurrent=weekEl.querySelector(".track-current");
+
+        if(index < currentWeekIndex){
+            trackCompleted.style.left="0";
+            trackCompleted.style.right="auto";
+            trackCompleted.style.width="100%";
+            trackCurrent.style.display="none";
+        }else if(index > currentWeekIndex){
+            weekEl.querySelector(".track").style.display="none";
+        }
+    });
+
+    if(currentWeekIndex<0) return;
 
     const week=allWeeks[currentWeekIndex];
     const targetBox=week.querySelector(".day.today");
-    const track=week.querySelector(".track");
     const row=week.querySelector(".days");
     const rowRect=row.getBoundingClientRect();
     const allWalkers=document.querySelectorAll(".walker");
@@ -487,27 +504,9 @@ requestAnimationFrame(()=>{
         const walkerWidth=walker.width;
         const x=boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
         walker.style.left=x + "px";
-        walker.style.transform=currentWeekIndex % 2===0
-            ? "scaleX(1)"
-            : "scaleX(-1)";
-
-
-
-        /*let progressWidth;
-        if(week.querySelector(".days").classList.contains("reverse")){
-            progressWidth=rowRect.right - boxRect.right + boxRect.width;
-        }
-        else{
-            progressWidth=boxRect.left - rowRect.left + boxRect.width;
-        }
-
-
-        const trackCompleted=week.querySelector(".track-completed");
-        trackCompleted.style.width=Math.max(0, progressWidth - 72) + "px";
-        const trackCurrent=week.querySelector(".track-current");
-        trackCurrent.style.display="block";
-        trackCurrent.style.left=Math.max(0, progressWidth - 72) + "px";*/
-
+        walker.style.transform=isReverse
+            ? "scaleX(-1)"
+            : "scaleX(1)";
     }
 });
 
