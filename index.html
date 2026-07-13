@@ -44,11 +44,10 @@ body{
 }
 
 #countdownBox{
-    white-space: nowrap;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.3em;
     font-size: clamp(18px, 5vw, 30px);
     width: fit-content;
     max-width: 80vw;
@@ -60,6 +59,21 @@ body{
     text-align: center;
     font-weight: bold;
     color: #8f5d5d;
+}
+
+.countdown-main{
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3em;
+}
+
+.countdown-sub{
+    margin-top: 6px;
+    font-size: 0.45em;
+    font-weight: normal;
+    color: #a98282;
 }
 
 .normal-text{
@@ -246,10 +260,15 @@ body{
 
 
 <div id="countdownBox" class="pixel-borders pixel-borders--3a pixel-borders--inset pixel-borders--inset-all">
-    <span class="normal-text">烙跑倒數</span>
-    <span id="dayNumber">dayNumber</span>
-    <span class="normal-text">天</span>
-    <img class="sparkles" src="sparkles.png">
+    <div class="countdown-main">
+        <span class="normal-text">烙跑倒數</span>
+        <span id="dayNumber">dayNumber</span>
+        <span class="normal-text">天</span>
+        <img class="sparkles" src="sparkles.png">
+    </div>
+    <div class="countdown-sub normal-text">
+        （還有 <span id="calendarDayNumber">calendarDayNumber</span> 天）
+    </div>
 </div>
 
 <div id="calendar"></div>
@@ -263,6 +282,14 @@ const WALK_GIF_LARGE="walk_48px.gif";
 const TRACK_IMAGE="";
 const HAMMOCK_GIF="";
 const WEEK_COLORS=["#ffbfd9","#ffe79a","#bff0b7","#bfeeff"];
+const LAST_WORKDAY = "2026-09-04";
+const SLEEP_DATE_1 = "2026-09-05";
+const SLEEP_DATE_2 = "2026-09-06";
+const SLEEP_GIF = "sleep.png";
+const REST_GIF = "rest.png";
+
+const TRACK_CURRENT_WIDTH = 72;
+const TRACK_CURRENT_HALF = TRACK_CURRENT_WIDTH / 2;
 const MOBILE_BREAKPOINT = 480;
 
 const calendar=document.getElementById("calendar");
@@ -280,6 +307,26 @@ function formatDate(d){
 
     return `${y}-${m}-${day}`;
 }
+
+function getRemainingWorkdays(startDate, endDate){
+    let count = 0;
+    const checkDate = new Date(startDate);
+    checkDate.setHours(0,0,0,0);
+
+    const end = new Date(endDate);
+    end.setHours(0,0,0,0);
+
+    while(checkDate <= end){
+        const day = checkDate.getDay();
+        if(day >= 1 && day <= 5){
+            count++;
+        }
+        checkDate.setDate(checkDate.getDate()+1);
+    }
+
+    return count;
+}
+
 
 const dates=[];
 let current=new Date(START_DATE);
@@ -309,14 +356,20 @@ const nowTaipei=getTaipeiDate(new Date());
 const today=new Date(nowTaipei);
 today.setHours(0,0,0,0);
 
-console.log(today);
-
 const endDate=getTaipeiDate(new Date(END_DATE));
 endDate.setHours(0,0,0,0);
 
-const remainingDays=Math.max(0, Math.ceil((endDate - today) / (1000*60*60*24)));
+const lastWorkdayDate=getTaipeiDate(new Date(LAST_WORKDAY));
+lastWorkdayDate.setHours(0,0,0,0);
 
-document.getElementById("dayNumber").textContent=remainingDays;
+const remainingCalendarDays=Math.max(0, Math.ceil((endDate - today) / (1000*60*60*24)));
+
+const remainingWorkdays = today <= lastWorkdayDate
+    ? getRemainingWorkdays(today, lastWorkdayDate)
+    : 0;
+
+document.getElementById("dayNumber").textContent = remainingWorkdays;
+document.getElementById("calendarDayNumber").textContent = remainingCalendarDays;
 
 let currentWeekIndex=-1;
 let currentDayIndex=-1;
@@ -400,7 +453,7 @@ weeks.forEach((week,weekIndex)=>{
 
         day.dataset.weekIndex=weekIndex;
         day.dataset.dayIndex=index;
-
+        day.dataset.date=formatDate(date);
 
         if(formatDate(date)===formatDate(today)){
             day.classList.add("today");
@@ -410,6 +463,9 @@ weeks.forEach((week,weekIndex)=>{
 
         if(formatDate(date)===END_DATE){
             day.classList.add("freedom");
+        }
+
+        if(formatDate(date)===LAST_WORKDAY){
             const flag=document.createElement("img");
             flag.className="flag";
             flag.src="flag.png";
@@ -438,6 +494,24 @@ weeks.forEach((week,weekIndex)=>{
     });
 });
 
+function getCharacterMode(){
+    const todayStr = formatDate(today);
+
+    if(todayStr === SLEEP_DATE_1 || todayStr === SLEEP_DATE_2){
+        return "sleeping";
+    }
+
+    const day = nowTaipei.getDay();
+    const hour = nowTaipei.getHours();
+    const isRestWindow = (day===0 && hour>=20) || (day===1 && hour<8);
+
+    if(isRestWindow){
+        return "resting";
+    }
+
+    return "walking";
+}
+
 function getWalkerSize(){
     return window.innerWidth < MOBILE_BREAKPOINT
         ? { size: 24, src: WALK_GIF_SMALL }
@@ -459,71 +533,28 @@ function applyWalkerSize(){
 
 applyWalkerSize();
 
-/*requestAnimationFrame(()=>{
-    const allWeeks=document.querySelectorAll(".week");
+function setTrackCurrentSpan(trackCompleted, trackCurrent, anchorLeft, width, rowWidth, isReverse){
+    const clampedLeft = Math.max(0, Math.min(rowWidth - width, anchorLeft));
+    const anchorRight = clampedLeft + width;
 
-    allWeeks.forEach((weekEl,index)=>{
-        const trackCompleted=weekEl.querySelector(".track-completed");
-        const trackCurrent=weekEl.querySelector(".track-current");
+    trackCurrent.style.width = width + "px";
 
-        if(index < currentWeekIndex){
-            trackCompleted.style.left="0";
-            trackCompleted.style.right="auto";
-            trackCompleted.style.width="100%";
-            trackCurrent.style.display="none";
-        }else if(index > currentWeekIndex){
-            weekEl.querySelector(".track").style.display="none";
-        }
-    });
+    if(!isReverse){
+        trackCompleted.style.left = "0px";
+        trackCompleted.style.right = "auto";
+        trackCompleted.style.width = clampedLeft + "px";
 
-    if(currentWeekIndex<0) return;
+        trackCurrent.style.left = clampedLeft + "px";
+        trackCurrent.style.right = "auto";
+    }else{
+        trackCompleted.style.left = "auto";
+        trackCompleted.style.right = "0px";
+        trackCompleted.style.width = Math.max(0, rowWidth - anchorRight) + "px";
 
-    const week=allWeeks[currentWeekIndex];
-    const targetBox=week.querySelector(".day.today");
-    const row=week.querySelector(".days");
-    const rowRect=row.getBoundingClientRect();
-    const allWalkers=document.querySelectorAll(".walker");
-    allWalkers.forEach(w=>{
-        w.style.display="none";
-    })
-    const walker=week.querySelector(".walker");
-    walker.style.display="block";
-
-    if(ENABLE_WALKER && walker){
-        const weekRect=week.getBoundingClientRect();
-        const boxRect=targetBox.getBoundingClientRect();
-
-        const isReverse=row.classList.contains("reverse");
-        const boxCenter=boxRect.left - rowRect.left + boxRect.width / 2;
-        const trackCompleted=week.querySelector(".track-completed");
-        const trackCurrent=week.querySelector(".track-current");
-        trackCurrent.style.display="block";
-
-        if(!isReverse){
-            trackCompleted.style.left="0px";
-            trackCompleted.style.right="auto";
-            trackCompleted.style.width=Math.max(0, boxCenter-36) + "px";
-
-            trackCurrent.style.left=Math.max(0, boxCenter-36) + "px";
-            trackCurrent.style.right="auto";
-        }else{
-            const reverseWidth=rowRect.width - boxCenter;
-            trackCompleted.style.left="auto";
-            trackCompleted.style.right="0px";
-            trackCompleted.style.width=Math.max(0, reverseWidth - 36) + "px";
-
-            trackCurrent.style.left="auto";
-            trackCurrent.style.right=Math.max(0, reverseWidth - 36) + "px";
-        }
-
-        const walkerWidth=walker.width;
-        const x=boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
-        walker.style.left=x + "px";
-        walker.style.transform=isReverse
-            ? "scaleX(-1)"
-            : "scaleX(1)";
+        trackCurrent.style.left = "auto";
+        trackCurrent.style.right = Math.max(0, rowWidth - anchorRight) + "px";
     }
-});*/
+}
 
 function renderAllTracks(){
     const allWeeks = document.querySelectorAll(".week");
@@ -532,12 +563,11 @@ function renderAllTracks(){
         const row = weekEl.querySelector(".days");
         const track = weekEl.querySelector(".track");
 
-        // resize 重算：track 的寬度/位置每次都要跟著 row 重新對齊
         track.style.display = "";
         updateTrackWidth(track, row);
 
-        const trackCompleted = weekEl.querySelector(".track-completed");
-        const trackCurrent = weekEl.querySelector(".track-current");
+        const trackCompleted=weekEl.querySelector(".track-completed");
+        const trackCurrent=weekEl.querySelector(".track-current");
 
         if(index < currentWeekIndex){
             trackCompleted.style.left = "0";
@@ -548,60 +578,97 @@ function renderAllTracks(){
             track.style.display = "none";
         }
     });
+     document.querySelectorAll(".hammock").forEach(el => el.remove());
 
-    if(currentWeekIndex < 0) return;
+     if(currentWeekIndex < 0) return;
 
-    const week = allWeeks[currentWeekIndex];
-    const targetBox = week.querySelector(".day.today");
-    const row = week.querySelector(".days");
-    const walker = week.querySelector(".walker");
+     const week = allWeeks[currentWeekIndex];
+     const row = week.querySelector(".days");
+     const walker = week.querySelector(".walker");
+     const trackCompleted = week.querySelector(".track-completed");
+     const trackCurrent=week.querySelector(".track-current");
 
-    // targetBox null 保護：找不到「今天」的格子就不畫 walker/track-current，直接結束
-    if(!targetBox || !row || !walker){
-        console.warn("renderAllTracks: 找不到 targetBox / row / walker，略過本次渲染");
+     if(!row || !walker){
+        console.warn("renderAllTracks: 找不到 row / walker，略過本次渲染");
         return;
     }
 
-    const rowRect = row.getBoundingClientRect();
+        document.querySelectorAll(".walker").forEach(w=>{
+            w.style.display = "none";
+        });
 
-    document.querySelectorAll(".walker").forEach(w=>{
-        w.style.display = "none";
-    });
-    walker.style.display = "block";
+        if(!ENABLE_WALKER) return;
 
-    if(ENABLE_WALKER){
-        const weekRect = week.getBoundingClientRect();
-        const boxRect = targetBox.getBoundingClientRect();
+        const rowRect=row.getBoundingClientRect();
+        const weekRect=week.getBoundingClientRect();
+        const isReverse=row.classList.contains("reverse");
+        const mode=getCharacterMode();
+        const { size: walkerSize, src: walkingSrc } = getWalkerSize();
 
-        const isReverse = row.classList.contains("reverse");
-        const boxCenter = boxRect.left - rowRect.left + boxRect.width / 2;
-        const trackCompleted = week.querySelector(".track-completed");
-        const trackCurrent = week.querySelector(".track-current");
         trackCurrent.style.display = "block";
 
-        if(!isReverse){
-            trackCompleted.style.left = "0px";
-            trackCompleted.style.right = "auto";
-            trackCompleted.style.width = Math.max(0, boxCenter-36) + "px";
+        if(mode === "sleeping"){
+            const box1 = week.querySelector(`[data-date="${SLEEP_DATE_1}"]`);
+            const box2 = week.querySelector(`[data-date="${SLEEP_DATE_2}"]`);
 
-            trackCurrent.style.left = Math.max(0, boxCenter-36) + "px";
-            trackCurrent.style.right = "auto";
-        }else{
-            const reverseWidth = rowRect.width - boxCenter;
-            trackCompleted.style.left = "auto";
-            trackCompleted.style.right = "0px";
-            trackCompleted.style.width = Math.max(0, reverseWidth - 36) + "px";
+            if(!box1 || !box2){
+                console.warn("renderAllTracks: 找不到睡眠模式對應日期格子");
+                return;
+            }
 
-            trackCurrent.style.left = "auto";
-            trackCurrent.style.right = Math.max(0, reverseWidth - 36) + "px";
+            const rect1 = box1.getBoundingClientRect();
+            const rect2 = box2.getBoundingClientRect();
+            const leftMost = Math.min(rect1.left, rect2.left);
+            const rightMost = Math.max(rect1.right, rect2.right);
+            const spanWidth = rightMost - leftMost;
+
+            walker.src = SLEEP_GIF || walkingSrc;
+            walker.style.display = "block";
+            walker.style.width = spanWidth + "px";
+            walker.style.height = walkerSize + "px";
+            walker.style.left = (leftMost - weekRect.left) + "px";
+            walker.style.transform = "scaleX(1)";
+
+            setTrackCurrentSpan(
+                trackCompleted, trackCurrent,
+                leftMost - rowRect.left, spanWidth,
+                rowRect.width, isReverse
+                );
+            return;
         }
 
-        const walkerWidth = walker.width;
-        const x = boxRect.left - weekRect.left + boxRect.width/2 - walkerWidth/2;
-        walker.style.left = x + "px";
+        const targetBox = week.querySelector(".day.today");
+
+        if(!targetBox){
+            console.warn("renderAllTracks: 找不到 targetBox，略過本次渲染");
+            return;
+        }
+
+        const boxRect = targetBox.getBoundingClientRect();
+        const boxCenterInRow = boxRect.left - rowRect.left + boxRect.width / 2;
+
+        walker.src = mode === "resting" ? (REST_GIF || walkingSrc) : walkingSrc;
+        walker.style.display = "block";
+        walker.style.width = walkerSize + "px";
+        walker.style.height = walkerSize + "px";
         walker.style.transform = isReverse ? "scaleX(-1)" : "scaleX(1)";
+
+        const walkerLeftInWeek = boxRect.left - weekRect.left + boxRect.width/2 - walkerSize/2;
+        walker.style.left = walkerLeftInWeek + "px";
+
+        setTrackCurrentSpan(
+            trackCompleted, trackCurrent,
+            boxCenterInRow - TRACK_CURRENT_HALF, TRACK_CURRENT_WIDTH,
+            rowRect.width, isReverse
+            );
+
+        if(mode === "resting" && HAMMOCK_GIF){
+            const hammock = document.createElement("img");
+            hammock.src = HAMMOCK_GIF;
+            hammock.className = "hammock";
+            week.appendChild(hammock);
+        }
     }
-}
 
 requestAnimationFrame(renderAllTracks);
 
@@ -615,31 +682,6 @@ function handleResize(){
 }
 
 window.addEventListener("resize", handleResize);
-
-function showHammock(){
-    if(!HAMMOCK_GIF) return;
-
-    const day=nowTaipei.getDay();
-    const hour=nowTaipei.getHours();
-    const sleepMode=(day===0 && hour>=20) || (day===1 && hour<8);
-
-    if(!sleepMode) return;
-
-    const week=document.querySelectorAll(".week")[currentWeekIndex];
-    if(!week) return;
-
-    const hammock=document.createElement("img");
-    hammock.src=HAMMOCK_GIF;
-    hammock.className="hammock";
-    week.appendChild(hammock);
-
-    const walker=week.querySelector(".walker");
-    if(walker){
-        walker.style.display="none";
-    }
-}
-
-showHammock();
 
 </script>
  
